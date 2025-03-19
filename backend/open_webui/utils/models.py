@@ -5,7 +5,7 @@ import sys
 from aiocache import cached
 from fastapi import Request
 
-from open_webui.routers import openai, ollama
+from open_webui.routers import openai
 from open_webui.functions import get_function_models
 
 
@@ -33,28 +33,15 @@ log.setLevel(SRC_LOG_LEVELS["MAIN"])
 async def get_all_base_models(request: Request, user: UserModel = None):
     function_models = []
     openai_models = []
-    ollama_models = []
 
     if request.app.state.config.ENABLE_OPENAI_API:
         openai_models = await openai.get_all_models(request, user=user)
         openai_models = openai_models["data"]
 
-    if request.app.state.config.ENABLE_OLLAMA_API:
-        ollama_models = await ollama.get_all_models(request, user=user)
-        ollama_models = [
-            {
-                "id": model["model"],
-                "name": model["name"],
-                "object": "model",
-                "created": int(time.time()),
-                "owned_by": "ollama",
-                "ollama": model,
-            }
-            for model in ollama_models["models"]
-        ]
+    
 
     function_models = await get_function_models(request)
-    models = function_models + openai_models + ollama_models
+    models = function_models + openai_models
 
     return models
 
